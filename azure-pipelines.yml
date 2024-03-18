@@ -1,0 +1,47 @@
+trigger:
+- main
+
+pool:
+  name: 'Ubuntu-az'
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '14.x'
+  displayName: 'Install Node.js'
+
+- script: |
+    npm install
+    npm run build
+  displayName: 'Build Node.js application'
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(System.DefaultWorkingDirectory)/dist' # Assuming your built files are in the 'dist' folder
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
+    replaceExistingArchive: true
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathtoPublish: '$(Build.ArtifactStagingDirectory)/app.zip'
+    artifactName: 'nodeApp'
+    publishLocation: 'Container'
+  displayName: 'Publish Node.js application artifact'
+
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'YourAzureSubscription' # Replace with the name of your Azure subscription service connection
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az vm extension set \
+        --resource-group YourResourceGroup \
+        --vm-name YourVMName \
+        --name customScript \
+        --publisher Microsoft.Azure.Extensions \
+        --settings '{"fileUris":["$(System.ArtifactsUri)/nodeApp/app.zip"],"commandToExecute":"unzip -o app.zip && cd your_app_directory && npm install && npm start"}'
+
+  displayName: 'Deploy Node.js application to Azure VM'
+

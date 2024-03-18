@@ -2,7 +2,7 @@ trigger:
 - main
 
 pool:
-  name: 'Ubuntu-az'
+  name: 'default'
 
 steps:
 - task: NodeTool@0
@@ -32,16 +32,16 @@ steps:
 
 - task: AzureCLI@2
   inputs:
-    azureSubscription: 'YourAzureSubscription' # Replace with the name of your Azure subscription service connection
+    azureSubscription: '4ed68a4b-d54d-444a-bddb-fdfec0f1b130' # Replace with the name of your Azure subscription service connection
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
       az vm extension set \
-        --resource-group YourResourceGroup \
-        --vm-name YourVMName \
+        --resource-group rg-aks-deployment-centralindia-01 \
+        --vm-name az-2-tier-deployment-centralindia-01 \
         --name customScript \
         --publisher Microsoft.Azure.Extensions \
-        --settings '{"fileUris":["$(System.ArtifactsUri)/nodeApp/app.zip"],"commandToExecute":"unzip -o app.zip && cd your_app_directory && npm install && npm start"}'
+        --settings '{"fileUris":["$(System.ArtifactsUri)/nodeApp/app.zip"],"commandToExecute":"unzip -o app.zip && cd nodeApp && npm install && npm start"}'
 
   displayName: 'Deploy Node.js application to Azure VM'
 
